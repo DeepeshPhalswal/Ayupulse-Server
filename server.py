@@ -42,21 +42,33 @@ def data():
     except Exception as e:
         return jsonify({"status": "error", "message": "Invalid JSON", "error": str(e)}), 400
 
-    # minimal validation / defaults
     ts = payload.get("timestamp")
     if ts is None:
         ts = int(datetime.utcnow().timestamp())
     human_time = datetime.utcfromtimestamp(int(ts)).isoformat() + "Z"
 
+    # -----------------------------------
+    #   Divide PPG values by 1000 safely
+    # -----------------------------------
+    def safe_div(v):
+        try:
+            return float(v) / 1000
+        except:
+            return v
+
+    ir1 = safe_div(payload.get("ir1", ""))
+    ir2 = safe_div(payload.get("ir2", ""))
+    ir3 = safe_div(payload.get("ir3", ""))
+
     row = {
         "timestamp": ts,
         "human_time": human_time,
         "mac": payload.get("mac", ""),
-        "ir1": payload.get("ir1", ""),
-        "ir2": payload.get("ir2", ""),
-        "ir3": payload.get("ir3", ""),
+        "ir1": ir1,
+        "ir2": ir2,
+        "ir3": ir3,
         "spo2": payload.get("spo2", ""),
-        "temperature": payload.get("temperature", "")
+        "temperature": (payload.get("temperature", ""))+69
     }
 
     ensure_csv()
@@ -71,5 +83,3 @@ if __name__ == "__main__":
     print(f"Server starting on port {PORT}...")
     print(f"Saving data to '{CSV_FILE}'")
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
-
-
