@@ -23,6 +23,18 @@ def ensure_csv():
             writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
             writer.writeheader()
 
+@app.route("/download", methods=["GET"])
+def download_csv():
+    if not os.path.exists(CSV_FILE):
+        return {"status": "error", "message": "CSV file not found"}, 404
+
+    return send_file(
+        CSV_FILE,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="sensors.csv"
+    )
+
 @app.route("/data", methods=["POST"])
 def data():
     try:
@@ -59,3 +71,4 @@ if __name__ == "__main__":
     print(f"Server starting on port {PORT}...")
     print(f"Saving data to '{CSV_FILE}'")
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
+
